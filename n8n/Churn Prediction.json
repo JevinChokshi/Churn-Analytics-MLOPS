@@ -312,6 +312,17 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -320,7 +331,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "0d9d434a-b75f-4e15-ae8f-92d11a733830",
+  "versionId": "6525ac6d-2faa-40f4-a595-e0c70f97633d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "1fc6e3ba29a82ae6bc2fc0c650b40fac447683e98587b22e7aa6ba68cd8f1f35"
