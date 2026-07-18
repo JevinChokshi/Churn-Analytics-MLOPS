@@ -1,0 +1,256 @@
+{
+  "name": "Automated Emails",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "churn-ops",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "199cf8c3-9cd8-48d2-a72d-11957d593af2",
+      "name": "Webhook",
+      "webhookId": "9731563d-3518-4af9-9866-5671b081af63"
+    },
+    {
+      "parameters": {
+        "jsCode": "const expectedKey = 'replace_me';\nconst headerKey = $json.headers?.['x-api-key'] ?? $json.headers?.['X-API-Key'];\n\nif (headerKey !== expectedKey) {\n  throw new Error('Unauthorized webhook call');\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c3c48857-9bd5-4dcf-8cdb-b2303cebff34",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event_type }}",
+                    "rightValue": "AUTOMATED_EMAIL_DISPATCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "dc14f103-59b1-4324-b666-1b93f988a0db"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "69563ff8-6d54-4bb7-908c-3cc6a8ed0efb",
+                    "leftValue": "={{ $json.body.event_type }}",
+                    "rightValue": "VIP_RED_DISPATCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a7617a77-4432-4afe-b4a4-a2c78a92d5e0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input items from the previous node\nconst items = $input.all();\n\n// Map through the items to extract your specific column (e.g., 'email' or 'id')\nconst list = items.flatMap(item => \n  item.json.body.customers.map(customer => customer.user_account_id)\n);\n\nconst audit_list = items.flatMap(item => \n  item.json.body.customers.map(customer => customer.audit_notes)\n);\n// Return the list joined by commas or newlines for the email\nreturn [{\n  json: {\n    my_list: list.join(', '),\n    audit_notes: audit_list.join(', ')// Use '\\n' instead of ', ' for a vertical list\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        112
+      ],
+      "id": "c45766dc-01bb-4bd6-b571-8c62135cc7f1",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "sendTo": "23jevin@gmail.com",
+        "subject": "VIP Customers at Churn Risk",
+        "message": "=Here is the list of customer_id: \n{{ $json.my_list }}\n\nHere are the audit notes:\n{{ $json.audit_notes }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        112
+      ],
+      "id": "aed4f4a3-4519-4a10-9f81-0da1ac14df74",
+      "name": "Send a message",
+      "webhookId": "f06d47e3-c03d-4dff-b55b-92ac14035942",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WrZEF1r4I9wFOHCx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input items from the previous node\nconst items = $input.all();\n\n// Map through the items to extract your specific column (e.g., 'email' or 'id')\nconst list = items.flatMap(item => \n  item.json.body.customers.map(customer => customer.user_account_id)\n);\n// Return the list joined by commas or newlines for the email\nreturn [{\n  json: {\n    my_list: list.join(', ')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "c4fdfaf7-4181-4e3c-852a-f732b3dd0b2d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "sendTo": "23jevin@gmail.com",
+        "subject": "Send automated emails to these customers",
+        "message": "=Send Automated emails to:\n{{ $('Code in JavaScript2').item.json.my_list }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        -96
+      ],
+      "id": "3b137c27-4d97-49ef-a381-954b8c63e2cd",
+      "name": "Send a message1",
+      "webhookId": "99e2f168-8f56-4c91-a474-b21990f4484a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WrZEF1r4I9wFOHCx",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d6d973d3-857c-4ae5-8c41-6d2138d0b8df",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1fc6e3ba29a82ae6bc2fc0c650b40fac447683e98587b22e7aa6ba68cd8f1f35"
+  },
+  "nodeGroups": [],
+  "id": "vuKdrsZIejJHPJZp",
+  "tags": []
+}

@@ -1,0 +1,331 @@
+{
+  "name": "Churn Prediction",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM analytics.churn_feature_matrix;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6f26b4c8-ea7f-4142-862c-a9566cb5a9cd",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "KtXfQx4eLFYkrHfj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        640,
+        0
+      ],
+      "id": "b298635e-38aa-4749-9aea-c15fff8e550f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      rows: $input.all().map(item => item.json)\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9c268bcd-a241-4f3a-b17d-8a9cb6a86f2f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const predictions = $input.first().json.predictions;\n\nreturn predictions.map(pred => ({\n  json: pred\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        0
+      ],
+      "id": "587dade9-e08c-4a21-827a-24f48727b85a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "analytics",
+          "mode": "list",
+          "cachedResultName": "analytics"
+        },
+        "table": {
+          "__rl": true,
+          "value": "churn_predictions",
+          "mode": "list",
+          "cachedResultName": "churn_predictions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_tenure_days": "={{ $json.customer_tenure_days }}",
+            "is_churned_historical": "={{ $json.is_churned_historical }}",
+            "calibrated_churn_probability": "={{ $json.calibrated_churn_probability }}",
+            "monthly_arpu": "={{ $json.monthly_arpu }}",
+            "projected_ltv": "={{ $json.projected_ltv }}",
+            "user_account_id": "={{ $json.user_account_id }}",
+            "country": "={{ $json.country }}",
+            "industry_type": "={{ $json.industry_type }}",
+            "registration_plan_code": "={{ $json.registration_plan_code }}",
+            "currency": "={{ $json.currency }}",
+            "allocated_operational_tier": "={{ $json.allocated_operational_tier }}",
+            "primary_frustration_driver_vector": "={{ $json.primary_frustration_driver_vector }}"
+          },
+          "matchingColumns": [
+            "user_account_id"
+          ],
+          "schema": [
+            {
+              "id": "user_account_id",
+              "displayName": "user_account_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "industry_type",
+              "displayName": "industry_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "registration_plan_code",
+              "displayName": "registration_plan_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "customer_tenure_days",
+              "displayName": "customer_tenure_days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "is_churned_historical",
+              "displayName": "is_churned_historical",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "calibrated_churn_probability",
+              "displayName": "calibrated_churn_probability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "monthly_arpu",
+              "displayName": "monthly_arpu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "projected_ltv",
+              "displayName": "projected_ltv",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "allocated_operational_tier",
+              "displayName": "allocated_operational_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "primary_frustration_driver_vector",
+              "displayName": "primary_frustration_driver_vector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "prediction_timestamp",
+              "displayName": "prediction_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "f5c270b4-5484-457c-828a-ac4f59099347",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "KtXfQx4eLFYkrHfj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "23a94c0d-3dba-4291-87a6-4b7e0062b057",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0d9d434a-b75f-4e15-ae8f-92d11a733830",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1fc6e3ba29a82ae6bc2fc0c650b40fac447683e98587b22e7aa6ba68cd8f1f35"
+  },
+  "nodeGroups": [],
+  "id": "ILB9Lz5g62jkGTla",
+  "tags": []
+}
