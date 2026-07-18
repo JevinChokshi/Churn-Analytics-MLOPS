@@ -1,0 +1,13 @@
+# Cache files
+__pycache__/
+*.pyc
+
+# Large model files
+*.joblib
+*.pkl
+
+# Local configuration secrets if any
+config.yaml
+
+#data
+data/
